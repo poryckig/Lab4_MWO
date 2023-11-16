@@ -34,3 +34,37 @@ jobs:
         restore-keys: ${{ runner.os }}-m2
     - name: Build and test with Maven
       run: mvn -B package --file pom.xml
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v3.1.3
+      
+  deploy-dev:
+
+      runs-on: ubuntu-latest
+
+      needs: build
+      environment:
+        name: 'Dev'
+        url: ${{ steps.deploy-to-azure.outputs.webapp-url }}
+      steps:
+        - name: Download a Build Artifact
+          uses: actions/download-artifact@v3.0.2
+        - name: Azure WebApp
+          id: deploy-to-azure
+          uses: Azure/webapps-deploy@v3.0.0
+          
+  deploy-prod:
+
+      runs-on: ubuntu-latest
+
+      needs: deploy-dev
+      environment:
+        name: 'Prod'
+        url: ${{ steps.deploy-to-azure.outputs.webapp-ulr }}
+      steps:
+        - name: Download a Build Artifact
+          uses: actions/download-artifact@v3.0.2
+          with:
+            name: personsApi-artifact
+        - name: Azure WebApp
+          id: deploy-to-azure
+          uses: Azure/webapps-deploy@v3.0.0          
